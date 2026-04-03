@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Data Structure Visualizer</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="queue.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <nav class="nav-tab">
+            <a href="index.html" class="nav-btn">Stack</a>
+            <a href="queue.html" class="nav-btn active">Queue</a>
+            <a href="circular-queue.html" class="nav-btn">Circular Queue</a>
+            <a href="quiz.html" class="nav-btn">Quiz</a>
+        </nav>
+        
+        <header>
+            <h1>Queue Visualizer</h1>
+            <p>First In, First Out (FIFO) Principle</p>
+        </header>
+
+        <div class="theory-box">
+            <h3>📖 What is a Queue?</h3>
+            <p>A Queue is a linear data structure that follows the <strong>FIFO (First-In, First-Out)</strong> principle. Think of it like a line of people waiting: the first person to join the line is the first one served (<strong>Dequeue</strong>), and new people join at the back of the line (<strong>Enqueue</strong>). The <strong>Front</strong> index tracks the element to be removed, while the <strong>Rear</strong> index tracks the last added element.</p>
+        </div>
+
+        <main>
+            <div class="controls-panel">
+                <div class="input-group">
+                    <input type="number" id="max-input" placeholder="Set MAX capacity (e.g. 5)" min="1" max="15" autocomplete="off">
+                    <button id="set-max-btn" class="btn outline">Set MAX</button>
+                </div>
+
+                <div class="input-group">
+                    <input type="text" id="item-input" placeholder="Enter a value..." autocomplete="off">
+                    <button id="enqueue-btn" class="btn primary">Enqueue</button>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="dequeue-btn" class="btn danger">Dequeue</button>
+                    <button id="peek-btn" class="btn secondary">Front</button>
+                    <button id="clear-btn" class="btn outline">Clear</button>
+                </div>
+                
+                <div class="message-box" id="message-box">
+                    Welcome! Queue is conceptually empty.
+                </div>
+                
+                <div class="info-panel">
+                    <div class="info-item">
+                        <span class="label">MAX (Size):</span>
+                        <span id="max-info" class="value">3</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">FRONT:</span>
+                        <span id="front-index" class="value">-1</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">REAR:</span>
+                        <span id="rear-index" class="value">-1</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Status:</span>
+                        <span id="status-info" class="value" style="color: #00b09b;">Normal</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="queue-display">
+                <div class="queue-wrapper">
+                    <!-- The items container -->
+                    <div class="queue-container" id="queue-container">
+                        <!-- Queue compartments will be dynamically injected here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="credit-footer">
+            Developed by <strong>Phyo Thiha Kyaw (ITPEC b4)</strong>
+        </footer>
+    </div>
+    
+    <script src="queue.js"></script>
+</body>
+</html>

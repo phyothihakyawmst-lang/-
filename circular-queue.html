@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circular Queue Data Structure Visualizer</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="queue.css">
+    <link rel="stylesheet" href="circular-queue.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <nav class="nav-tab">
+            <a href="index.html" class="nav-btn">Stack</a>
+            <a href="queue.html" class="nav-btn">Queue</a>
+            <a href="circular-queue.html" class="nav-btn active">Circular Queue</a>
+            <a href="quiz.html" class="nav-btn">Quiz</a>
+        </nav>
+        
+        <header>
+            <h1>Circular Queue</h1>
+            <p>Optimized Queue with Ring-Buffer (Wrapping)</p>
+        </header>
+
+        <div class="theory-box">
+            <h3>📖 What is a Circular Queue?</h3>
+            <p>A Circular Queue is an extended version of a normal Queue. When the <strong>Rear</strong> pointer reaches the end of the array, it wraps around to the beginning (<strong>Index 0</strong>) if there is empty space available. This solves the major memory waste problem of a normal queue, allowing continuous reuse of empty slots without needing to shift elements or clear the array repeatedly!</p>
+        </div>
+
+        <main>
+            <div class="controls-panel">
+                <div class="input-group">
+                    <input type="number" id="max-input" placeholder="Set MAX capacity (e.g. 5)" min="1" max="15" autocomplete="off">
+                    <button id="set-max-btn" class="btn outline">Set MAX</button>
+                </div>
+
+                <div class="input-group">
+                    <input type="text" id="item-input" placeholder="Enter a value..." autocomplete="off">
+                    <button id="enqueue-btn" class="btn primary">Enqueue</button>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="dequeue-btn" class="btn danger">Dequeue</button>
+                    <button id="peek-btn" class="btn secondary">Front</button>
+                    <button id="clear-btn" class="btn outline">Clear</button>
+                </div>
+                
+                <div class="message-box" id="message-box">
+                    Welcome! Circular Queue is conceptually empty.
+                </div>
+                
+                <div class="info-panel">
+                    <div class="info-item">
+                        <span class="label">MAX (Size):</span>
+                        <span id="max-info" class="value">3</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">FRONT:</span>
+                        <span id="front-index" class="value">-1</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">REAR:</span>
+                        <span id="rear-index" class="value">-1</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Status:</span>
+                        <span id="status-info" class="value" style="color: #00b09b;">Normal</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cq-display">
+                <div class="cq-wrapper">
+                    <!-- The items container -->
+                    <div class="cq-container" id="queue-container">
+                        <!-- Queue compartments will be dynamically injected here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="credit-footer">
+            Developed by <strong>Phyo Thiha Kyaw (ITPEC b4)</strong>
+        </footer>
+    </div>
+    
+    <script src="circular-queue.js"></script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+/* Circular Queue Specific Styles */
+.cq-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 450px;
+    width: 100%;
+}
+
+.cq-container {
+    position: relative;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    /* Optional: a faint ring to show the circle */
+    border: 3px dashed rgba(255, 255, 255, 0.1);
+    background: radial-gradient(circle, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 70%);
+}
+
+.cq-slot {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border: 2px dashed rgba(255,255,255,0.3);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.5s ease;
+}
+
+.cq-slot-index {
+    position: absolute;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    background: rgba(0,0,0,0.4);
+    padding: 2px 6px;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+.cq-pointer {
+    position: absolute;
+    font-size: 0.75rem;
+    font-weight: 800;
+    white-space: nowrap;
+    text-align: center;
+    padding: 3px 6px;
+    border-radius: 4px;
+    background: rgba(0,0,0,0.8);
+    z-index: 10;
+    transition: all 0.3s;
+}
+
+.cq-pointer.front-ptr {
+    color: var(--danger);
+    border: 1px solid var(--danger);
+}
+
+.cq-pointer.rear-ptr {
+    color: var(--primary);
+    border: 1px solid var(--primary);
+}
+
+.slot-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.queue-item {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--item-bg);
+    border: 1px solid var(--item-border);
+    border-radius: 50%; /* Circle items! */
+    font-weight: 600;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    opacity: 0;
+    animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.queue-item.dequeuing {
+    animation: popOut 0.4s cubic-bezier(0.36, 0, 0.66, -0.56) forwards;
+}
+
+.queue-item.peeking {
+    animation: pulse 1s infinite alternate;
+    border: 2px solid var(--secondary);
+}
+
+@keyframes popIn {
+    0% { opacity: 0; transform: scale(0); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes popOut {
+    0% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0); }
+}
+
+@media (max-width: 768px) {
+    .cq-container {
+        width: 300px;
+        height: 300px;
+    }
+    .cq-slot {
+        width: 45px;
+        height: 45px;
+    }
+    .queue-item {
+        font-size: 0.9rem;
+    }
+}
