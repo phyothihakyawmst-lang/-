@@ -1,14 +1,13 @@
 class CircularQueue {
     constructor() {
-        this.items = new Array(15).fill(null); // Max theoretical capacity is 15
-        this.maxSize = 3;
+        this.items = new Array(15).fill(null);
+        this.maxSize = 8; // Default to 8 to match the user's image
         this.front = -1;
         this.rear = -1;
     }
 
     isFull() {
         if (this.front === -1) return false;
-        // True if next position of rear is front
         return (this.rear + 1) % this.maxSize === this.front;
     }
 
@@ -37,7 +36,6 @@ class CircularQueue {
         this.items[this.front] = null;
         
         if (this.front === this.rear) {
-            // Queue is now empty
             this.front = -1;
             this.rear = -1;
         } else {
@@ -58,7 +56,6 @@ class CircularQueue {
     }
 }
 
-// UI Controllers
 document.addEventListener("DOMContentLoaded", () => {
     const queue = new CircularQueue();
     
@@ -76,274 +73,215 @@ document.addEventListener("DOMContentLoaded", () => {
     const frontIndexInfo = document.getElementById("front-index");
     const rearIndexInfo = document.getElementById("rear-index");
     const statusInfo = document.getElementById("status-info");
-    const queueContainer = document.getElementById("queue-container");
+    const svg = document.getElementById("cq-svg");
 
-    let isAnimating = false;
-
-    // Utilities
     const showMessage = (msg, type = "normal") => {
         messageBox.textContent = msg;
         messageBox.className = "message-box " + type;
     };
 
-    const updateInfo = (statusText = "Normal", statusType = "normal") => {
+    const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
+        const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+        return {
+            x: centerX + (radius * Math.cos(angleInRadians)),
+            y: centerY + (radius * Math.sin(angleInRadians))
+        };
+    };
+
+    const describeArc = (x, y, radius, startAngle, endAngle) => {
+        const start = polarToCartesian(x, y, radius, endAngle);
+        const end = polarToCartesian(x, y, radius, startAngle);
+        const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+        return [
+            "M", start.x, start.y, 
+            "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y
+        ].join(" ");
+    };
+
+    const renderQueue = () => {
+        svg.innerHTML = "";
+        const size = queue.maxSize;
+        const cx = 200, cy = 200;
+        const outerR = 180, innerR = 100;
+        const angleStep = 360 / size;
+
+        for (let i = 0; i < size; i++) {
+            const startAngle = i * angleStep;
+            const endAngle = (i + 1) * angleStep;
+
+            // Generate Donut Segment Path
+            const outerStart = polarToCartesian(cx, cy, outerR, startAngle);
+            const outerEnd = polarToCartesian(cx, cy, outerR, endAngle);
+            const innerStart = polarToCartesian(cx, cy, innerR, startAngle);
+            const innerEnd = polarToCartesian(cx, cy, innerR, endAngle);
+
+            const pathData = [
+                "M", outerStart.x, outerStart.y,
+                "A", outerR, outerR, 0, 0, 1, outerEnd.x, outerEnd.y,
+                "L", innerEnd.x, innerEnd.y,
+                "A", innerR, innerR, 0, 0, 0, innerStart.x, innerStart.y,
+                "Z"
+            ].join(" ");
+
+            const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", pathData);
+            path.setAttribute("class", "cq-segment" + (queue.items[i] !== null ? " occupied" : ""));
+            path.id = `segment-${i}`;
+            
+            // Text for item value
+            const midAngle = startAngle + angleStep / 2;
+            const textR = (outerR + innerR) / 2;
+            const textPos = polarToCartesian(cx, cy, textR, midAngle);
+            
+            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("x", textPos.x);
+            text.setAttribute("y", textPos.y);
+            text.setAttribute("class", "cq-segment-text");
+            text.textContent = queue.items[i] || "";
+
+            // Index Label (moved slightly inward if at the very bottom)
+            const indexR = outerR + 18;
+            const indexPos = polarToCartesian(cx, cy, indexR, midAngle);
+            const indexText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            indexText.setAttribute("x", indexPos.x);
+            indexText.setAttribute("y", indexPos.y);
+            indexText.setAttribute("class", "cq-segment-index");
+            indexText.textContent = i;
+
+            g.appendChild(path);
+            g.appendChild(text);
+            g.appendChild(indexText);
+            svg.appendChild(g);
+        }
+
+        renderPointers();
+        updateStats();
+    };
+
+    const renderPointers = () => {
+        const cx = 200, cy = 200;
+        const innerR = 100;
+        const angleStep = 360 / queue.maxSize;
+
+        const drawPointer = (index, label, className) => {
+            if (index === -1) return;
+            const angle = (index * angleStep) + (angleStep / 2);
+            
+            // Line from center
+            const start = polarToCartesian(cx, cy, 0, angle);
+            const limit = polarToCartesian(cx, cy, innerR - 10, angle);
+            
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", cx);
+            line.setAttribute("y1", cy);
+            line.setAttribute("x2", limit.x);
+            line.setAttribute("y2", limit.y);
+            line.setAttribute("class", `${className}-line`);
+            svg.appendChild(line);
+
+            // Label near the inner circle
+            const tPos = polarToCartesian(cx, cy, innerR - 35, angle);
+            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("x", tPos.x);
+            text.setAttribute("y", tPos.y);
+            text.setAttribute("class", `cq-ptr-label ${className}-text`);
+            text.setAttribute("text-anchor", "middle");
+            text.textContent = label;
+            svg.appendChild(text);
+        };
+
+        if (queue.front === queue.rear && queue.front !== -1) {
+            drawPointer(queue.front, "F & R", "front-ptr");
+        } else {
+            drawPointer(queue.front, "FRONT", "front-ptr");
+            drawPointer(queue.rear, "REAR", "rear-ptr");
+        }
+    };
+
+    const updateStats = (status = "Normal", isError = false) => {
         maxInfo.textContent = queue.maxSize;
         frontIndexInfo.textContent = queue.front;
         rearIndexInfo.textContent = queue.rear;
-        
-        statusInfo.textContent = statusText;
-        if (statusType === "error") {
-            statusInfo.style.color = "#ff416c";
-            statusInfo.style.fontWeight = "bold";
-        } else {
-            statusInfo.style.color = "#00b09b";
-            statusInfo.style.fontWeight = "normal";
-        }
-        
-        // Remove old pointers
-        document.querySelectorAll(".cq-pointer").forEach(el => el.remove());
-
-        const radius = window.innerWidth <= 768 ? 130 : 160; 
-        const centerX = window.innerWidth <= 768 ? 150 : 200;
-        const centerY = window.innerWidth <= 768 ? 150 : 200;
-
-        // Add Front Pointer
-        if (queue.front !== -1) {
-            const frontSlot = document.getElementById("slot-" + queue.front);
-            if (frontSlot) {
-                const fPtr = document.createElement("div");
-                fPtr.className = "cq-pointer front-ptr";
-                fPtr.textContent = "FRONT";
-                
-                // Position pointer outside the slot
-                const angle = -90 + (360 / queue.maxSize) * queue.front;
-                const rad = angle * (Math.PI / 180);
-                const ptrRadX = Math.cos(rad) * 45;
-                const ptrRadY = Math.sin(rad) * 45;
-                
-                fPtr.style.left = `calc(50% + ${ptrRadX}px)`;
-                fPtr.style.top = `calc(50% + ${ptrRadY}px)`;
-                fPtr.style.transform = "translate(-50%, -50%)";
-                
-                frontSlot.appendChild(fPtr);
-            }
-        }
-
-        // Add Rear Pointer
-        if (queue.rear !== -1) {
-            const rearSlot = document.getElementById("slot-" + queue.rear);
-            if (rearSlot) {
-                const rPtr = document.createElement("div");
-                rPtr.className = "cq-pointer rear-ptr";
-                rPtr.textContent = "REAR";
-                
-                // If front and rear are the same, position slightly differently so they don't exactly overlap
-                const isSame = queue.front === queue.rear;
-                const offset = isSame ? -45 : 45; // If same, REAR goes inward, FRONT goes outward
-                
-                const angle = -90 + (360 / queue.maxSize) * queue.rear;
-                const rad = angle * (Math.PI / 180);
-                const ptrRadX = Math.cos(rad) * offset;
-                const ptrRadY = Math.sin(rad) * offset;
-                
-                rPtr.style.left = `calc(50% + ${ptrRadX}px)`;
-                rPtr.style.top = `calc(50% + ${ptrRadY}px)`;
-                rPtr.style.transform = "translate(-50%, -50%)";
-                
-                rearSlot.appendChild(rPtr);
-            }
-        }
+        statusInfo.textContent = status;
+        statusInfo.style.color = isError ? "var(--danger)" : "#00b09b";
     };
 
-    const initSlots = () => {
-        queueContainer.innerHTML = "";
-        const isMobile = window.innerWidth <= 768;
-        const radius = isMobile ? 120 : 160; 
-        const centerX = isMobile ? 150 : 200; 
-        const centerY = isMobile ? 150 : 200;
-        
-        for(let i = 0; i < queue.maxSize; i++) {
-            const angle = -90 + (360 / queue.maxSize) * i;
-            const rad = angle * (Math.PI / 180);
-            
-            const x = centerX + radius * Math.cos(rad);
-            const y = centerY + radius * Math.sin(rad);
-            
-            const slot = document.createElement("div");
-            slot.className = "cq-slot";
-            slot.id = "slot-" + i;
-            slot.style.left = `${x}px`;
-            slot.style.top = `${y}px`;
-            slot.style.transform = "translate(-50%, -50%)";
-            
-            const content = document.createElement("div");
-            content.className = "slot-content";
-            
-            const idx = document.createElement("div");
-            idx.className = "cq-slot-index";
-            idx.textContent = `[${i}]`;
-            
-            // Index position inside slightly
-            const idxRadius = radius - 40;
-            const idxX = centerX + idxRadius * Math.cos(rad) - x;
-            const idxY = centerY + idxRadius * Math.sin(rad) - y;
-            idx.style.left = `calc(50% + ${idxX}px)`;
-            idx.style.top = `calc(50% + ${idxY}px)`;
-            idx.style.transform = "translate(-50%, -50%)";
-            
-            slot.appendChild(content);
-            slot.appendChild(idx);
-            queueContainer.appendChild(slot);
-        }
-        updateInfo("Normal");
-    };
-
-    // Enqueue Operation
     const handleEnqueue = () => {
-        if (isAnimating) return;
         const val = itemInput.value.trim();
-        if (!val) {
-            showMessage("Please enter a value to enqueue.", "error");
-            itemInput.focus();
-            return;
-        }
-
-        if (queue.isFull()) {
-            updateInfo("OVERFLOW", "error");
-            showMessage(`Circular Queue Overflow! Cannot enqueue "${val}" because all slots are full.`, "error");
-            return;
-        }
-
-        queue.enqueue(val);
-        const rearIdx = queue.rear;
+        if (!val) return showMessage("Enter a value!", "error");
         
-        // Visual Update
-        const slotContent = document.querySelector(`#slot-${rearIdx} .slot-content`);
-        if (slotContent) {
-            slotContent.innerHTML = ""; // clear any lingering element
-            const elem = document.createElement("div");
-            elem.classList.add("queue-item");
-            elem.textContent = val;
-            slotContent.appendChild(elem);
+        const result = queue.enqueue(val);
+        if (result === "Overflow") {
+            updateStats("OVERFLOW", true);
+            return showMessage("Queue Overflow!", "error");
         }
 
-        showMessage(`Enqueued "${val}" at index ${rearIdx}.`, "success");
+        renderQueue();
+        const seg = document.getElementById(`segment-${queue.rear}`);
+        seg.classList.add("animate-enqueue");
+        
+        showMessage(`Enqueued "${val}" at index ${queue.rear}`, "success");
         itemInput.value = "";
         itemInput.focus();
-        updateInfo("Normal");
-        removePeekHighlight();
     };
 
-    // Dequeue Operation
     const handleDequeue = () => {
-        if (isAnimating) return;
         if (queue.isEmpty()) {
-            updateInfo("UNDERFLOW", "error");
-            showMessage("Queue Underflow! Cannot dequeue, queue is already empty.", "error");
-            return;
+            updateStats("UNDERFLOW", true);
+            return showMessage("Queue Underflow!", "error");
         }
-
-        const frontIdx = queue.front;
-        const val = queue.dequeue(); // logic updates pointers internally
         
-        // Visual Update
-        const slotContent = document.querySelector(`#slot-${frontIdx} .slot-content`);
-        if (slotContent) {
-            const frontElement = slotContent.firstElementChild;
-            if(frontElement) {
-                isAnimating = true;
-                frontElement.classList.add("dequeuing");
-                setTimeout(() => {
-                    frontElement.remove();
-                    isAnimating = false;
-                    updateInfo("Normal");
-                }, 450);
-            }
-        } else {
-            updateInfo("Normal");
-        }
-
-        showMessage(`Dequeued "${val}" from index ${frontIdx}.`, "success");
-        removePeekHighlight();
+        const f = queue.front;
+        const val = queue.dequeue();
+        renderQueue();
+        showMessage(`Dequeued "${val}" from index ${f}`, "success");
     };
 
-    // Peek Operation
     const handlePeek = () => {
         if (queue.isEmpty()) {
-            updateInfo("UNDERFLOW", "error");
-            showMessage("Cannot peek. Circular Queue is empty.", "error");
-            return;
+            updateStats("UNDERFLOW", true);
+            return showMessage("Cannot peek. Circular Queue is empty.", "error");
         }
 
         const val = queue.peek();
         showMessage(`Front element is "${val}" at index ${queue.front}.`, "normal");
-        updateInfo("Normal");
         
-        // Highlight front element
-        removePeekHighlight();
-        const frontIdx = queue.front;
-        const slotContent = document.querySelector(`#slot-${frontIdx} .slot-content`);
-        if (slotContent) {
-            const frontElement = slotContent.firstElementChild;
-            if(frontElement) {
-                frontElement.classList.add("peeking");
-                setTimeout(() => {
-                    if(frontElement) frontElement.classList.remove("peeking");
-                }, 2000);
-            }
+        // Visual Highlight: Flash the front segment
+        const frontSeg = document.getElementById(`segment-${queue.front}`);
+        if(frontSeg) {
+            frontSeg.style.filter = "brightness(1.5)";
+            setTimeout(() => {
+                frontSeg.style.filter = "";
+            }, 1000);
         }
     };
 
-    // Clear Operation
-    const handleClear = () => {
-        if (queue.isEmpty()) {
-            showMessage("Queue is already empty.", "normal");
-            return;
-        }
-        queue.clear();
-        initSlots();
-        showMessage("Circular Queue cleared.", "normal");
-        updateInfo("Normal");
-        removePeekHighlight();
-    };
-    
-    // Set Max Operation
     const handleSetMax = () => {
-        let newMax = parseInt(maxInput.value);
-        if(isNaN(newMax) || newMax < 1 || newMax > 15) {
-            showMessage("Please enter a valid MAX size between 1 and 15.", "error");
-            return;
-        }
-        queue.maxSize = newMax;
-        queue.clear(); 
-        initSlots();
+        let val = parseInt(maxInput.value);
+        if (isNaN(val) || val < 2 || val > 15) return showMessage("Size must be 2-15", "error");
+        queue.maxSize = val;
+        queue.clear();
+        renderQueue();
         maxInput.value = "";
-        showMessage(`MAX (capacity) set to ${newMax}. Queue has been cleared.`, "success");
+        showMessage(`MAX set to ${val}`, "success");
     };
 
-    const removePeekHighlight = () => {
-        document.querySelectorAll('.queue-item').forEach(el => el.classList.remove('peeking'));
+    const handleClear = () => {
+        queue.clear();
+        renderQueue();
+        showMessage("Queue cleared", "normal");
     };
 
-    // Event Listeners
     enqueueBtn.addEventListener("click", handleEnqueue);
     dequeueBtn.addEventListener("click", handleDequeue);
     peekBtn.addEventListener("click", handlePeek);
-    clearBtn.addEventListener("click", handleClear);
     setMaxBtn.addEventListener("click", handleSetMax);
+    clearBtn.addEventListener("click", handleClear);
+    
+    itemInput.addEventListener("keydown", e => e.key === "Enter" && handleEnqueue());
+    maxInput.addEventListener("keydown", e => e.key === "Enter" && handleSetMax());
 
-    itemInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") {
-            handleEnqueue();
-        }
-    });
-
-    maxInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") {
-            handleSetMax();
-        }
-    });
-
-    // Setup initial grid
-    initSlots();
+    renderQueue();
 });
